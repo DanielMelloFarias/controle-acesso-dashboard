@@ -74,7 +74,7 @@ export const mockDashboardData = {
       {
         id: 3,
         time: '09:15',
-        name: 'João Oliveira',
+        name: 'João Oliveire',
         avatar: '/assets/images/employee3.jpg',
         type: 'Entrada',
         location: 'Garagem',
