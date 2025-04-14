@@ -5,7 +5,6 @@ import {
   VStack,
   Heading,
   Text,
-  Input,
   Select,
   Button,
   Flex,
@@ -21,16 +20,21 @@ import {
   DrawerOverlay,
   DrawerContent,
   DrawerCloseButton,
+  useToast
 } from '@chakra-ui/react';
 import { FiChevronLeft, FiChevronRight, FiUser, FiCalendar, FiGrid, FiCheck } from 'react-icons/fi';
 import { useFilter } from '../../contexts/FilterContext';
+import { useDashboard } from '../../contexts/DashboardContext';
 import DateRangePicker from '../common/DateRangePicker';
+import EmployeeSearch from '../common/EmployeeSearch';
 
 const Sidebar = ({ isCollapsed, toggleSidebar, isMobile, isOpen }) => {
   const { filters, updateFilter, resetFilters } = useFilter();
+  const { refreshData } = useDashboard();
+  const toast = useToast();
 
-  const handleEmployeeChange = (e) => {
-    updateFilter('employee', e.target.value);
+  const handleEmployeeChange = (value) => {
+    updateFilter('employee', value);
   };
 
   const handleDepartmentChange = (e) => {
@@ -46,11 +50,37 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobile, isOpen }) => {
   };
 
   const handleApplyFilters = () => {
-    console.log('Filtros aplicados:', filters);
+    // Atualiza os dados com base nos filtros
+    refreshData();
+    
+    // Feedback visual para o usuário
+    toast({
+      title: "Filtros aplicados",
+      description: "Os dados foram atualizados com base nos filtros selecionados.",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+      position: "top-right"
+    });
+    
     // Fechar sidebar em mobile após aplicar filtros
     if (isMobile) {
       toggleSidebar();
     }
+  };
+  
+  const handleResetFilters = () => {
+    resetFilters();
+    refreshData();
+    
+    toast({
+      title: "Filtros removidos",
+      description: "Todos os filtros foram removidos.",
+      status: "info",
+      duration: 3000,
+      isClosable: true,
+      position: "top-right"
+    });
   };
 
   // Conteúdo dos filtros - reutilizado em ambos os modos
@@ -70,17 +100,10 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobile, isOpen }) => {
       <VStack spacing={4} align="stretch">
         <FormControl>
           <FormLabel fontSize="sm" mb={1} color="white">Funcionário</FormLabel>
-          <Input
-            placeholder="Busca rápida..."
-            size="sm"
+          <EmployeeSearch 
             value={filters.employee}
             onChange={handleEmployeeChange}
-            bg="#2D4A74"
-            color="white"
-            borderColor="#4A6895"
-            _hover={{ borderColor: '#6B89C0' }}
-            _focus={{ borderColor: '#90CAF9', boxShadow: '0 0 0 1px #90CAF9' }}
-            _placeholder={{ color: 'whiteAlpha.600' }}
+            darkMode={true}
           />
         </FormControl>
 
@@ -136,17 +159,29 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobile, isOpen }) => {
           </Select>
         </FormControl>
 
-        <Button
-          mt={2}
-          colorScheme="blue"
-          size="md"
-          w="full"
-          onClick={handleApplyFilters}
-          bg="#3182CE"
-          _hover={{ bg: "#2B6CB0" }}
-        >
-          Aplicar Filtros
-        </Button>
+        <Flex gap={2} mt={2}>
+          <Button
+            flex="1"
+            variant="outline"
+            size="md"
+            onClick={handleResetFilters}
+            borderColor="whiteAlpha.400"
+            color="white"
+            _hover={{ bg: "whiteAlpha.100" }}
+          >
+            Limpar
+          </Button>
+          <Button
+            flex="1"
+            colorScheme="blue"
+            size="md"
+            onClick={handleApplyFilters}
+            bg="#3182CE"
+            _hover={{ bg: "#2B6CB0" }}
+          >
+            Aplicar Filtros
+          </Button>
+        </Flex>
       </VStack>
     </>
   );
@@ -243,6 +278,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobile, isOpen }) => {
               variant="ghost"
               color="white"
               _hover={{ bg: "whiteAlpha.200" }}
+              onClick={toggleSidebar}
             />
           </Tooltip>
           
@@ -253,6 +289,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobile, isOpen }) => {
               variant="ghost"
               color="white"
               _hover={{ bg: "whiteAlpha.200" }}
+              onClick={toggleSidebar}
             />
           </Tooltip>
           
@@ -263,6 +300,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobile, isOpen }) => {
               variant="ghost"
               color="white"
               _hover={{ bg: "whiteAlpha.200" }}
+              onClick={toggleSidebar}
             />
           </Tooltip>
           
@@ -274,6 +312,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobile, isOpen }) => {
               variant="solid"
               size="sm"
               mt={6}
+              onClick={handleApplyFilters}
             />
           </Tooltip>
         </VStack>

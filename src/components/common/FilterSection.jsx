@@ -1,5 +1,5 @@
 // src/components/common/FilterSection.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   VStack,
@@ -15,30 +15,29 @@ import {
   IconButton,
   Badge,
   useDisclosure,
-  useColorModeValue
+  useColorModeValue,
+  useToast
 } from '@chakra-ui/react';
 import { FiFilter, FiX, FiSearch, FiCalendar, FiUsers, FiCheckCircle } from 'react-icons/fi';
 import DateRangePicker from './DateRangePicker';
+import EmployeeSearch from './EmployeeSearch';
 import { useFilter } from '../../contexts/FilterContext';
+import { useDashboard } from '../../contexts/DashboardContext';
 
 const FilterSection = ({ onApplyFilters }) => {
-  const { filters, updateFilter, resetFilters } = useFilter();
+  const { filters, updateFilter, resetFilters, activeFiltersCount } = useFilter();
+  const { refreshData } = useDashboard();
   const { isOpen, onToggle } = useDisclosure();
+  const toast = useToast();
   
   const [localFilters, setLocalFilters] = useState({ ...filters });
-  const [activeFiltersCount, setActiveFiltersCount] = useState(0);
 
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
 
-  // Atualiza o contador de filtros ativos
-  React.useEffect(() => {
-    let count = 0;
-    if (filters.employee) count++;
-    if (filters.department !== 'todos') count++;
-    if (filters.status !== 'todos') count++;
-    if (filters.dateRange.startDate || filters.dateRange.endDate) count++;
-    setActiveFiltersCount(count);
+  // Atualiza os filtros locais quando os filtros globais mudam
+  useEffect(() => {
+    setLocalFilters({ ...filters });
   }, [filters]);
 
   const handleInputChange = (field, value) => {
@@ -61,6 +60,19 @@ const FilterSection = ({ onApplyFilters }) => {
       updateFilter(key, value);
     });
     
+    // Atualiza dados do dashboard com os novos filtros
+    refreshData();
+    
+    // Mostra toast de confirmação
+    toast({
+      title: "Filtros aplicados",
+      description: `${activeFiltersCount} filtro(s) ativo(s)`,
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+      position: "top-right"
+    });
+    
     // Fecha o painel de filtros
     if (isOpen) onToggle();
     
@@ -79,6 +91,25 @@ const FilterSection = ({ onApplyFilters }) => {
         endDate: null
       }
     });
+    
+    // Atualiza dados do dashboard após limpar filtros
+    refreshData();
+    
+    // Mostra toast de confirmação
+    toast({
+      title: "Filtros limpos",
+      description: "Exibindo todos os registros",
+      status: "info",
+      duration: 3000,
+      isClosable: true,
+      position: "top-right"
+    });
+  };
+
+  // Remove um filtro específico
+  const handleRemoveFilter = (key, defaultValue) => {
+    updateFilter(key, defaultValue);
+    refreshData();
   };
 
   return (
@@ -141,10 +172,10 @@ const FilterSection = ({ onApplyFilters }) => {
                 <FiSearch size={14} style={{ marginRight: '6px' }} />
                 Funcionário
               </FormLabel>
-              <Input 
-                placeholder="Busca por nome..." 
+              <EmployeeSearch 
                 value={localFilters.employee} 
-                onChange={(e) => handleInputChange('employee', e.target.value)}
+                onChange={(value) => handleInputChange('employee', value)}
+                darkMode={false}
               />
             </FormControl>
 
@@ -211,7 +242,7 @@ const FilterSection = ({ onApplyFilters }) => {
                     alignItems="center"
                   >
                     Funcionário: {filters.employee}
-                    <Box as="span" ml={1} cursor="pointer" onClick={() => updateFilter('employee', '')}>
+                    <Box as="span" ml={1} cursor="pointer" onClick={() => handleRemoveFilter('employee', '')}>
                       <FiX size={14} />
                     </Box>
                   </Badge>
@@ -227,7 +258,7 @@ const FilterSection = ({ onApplyFilters }) => {
                     alignItems="center"
                   >
                     Setor: {filters.department}
-                    <Box as="span" ml={1} cursor="pointer" onClick={() => updateFilter('department', 'todos')}>
+                    <Box as="span" ml={1} cursor="pointer" onClick={() => handleRemoveFilter('department', 'todos')}>
                       <FiX size={14} />
                     </Box>
                   </Badge>
@@ -243,7 +274,7 @@ const FilterSection = ({ onApplyFilters }) => {
                     alignItems="center"
                   >
                     Status: {filters.status}
-                    <Box as="span" ml={1} cursor="pointer" onClick={() => updateFilter('status', 'todos')}>
+                    <Box as="span" ml={1} cursor="pointer" onClick={() => handleRemoveFilter('status', 'todos')}>
                       <FiX size={14} />
                     </Box>
                   </Badge>
@@ -258,12 +289,12 @@ const FilterSection = ({ onApplyFilters }) => {
                     display="flex"
                     alignItems="center"
                   >
-                    Período: {filters.dateRange.startDate?.toLocaleDateString()} - {filters.dateRange.endDate?.toLocaleDateString() || 'Atual'}
+                    Período: {filters.dateRange.startDate?.toLocaleDateString() || 'Início'} - {filters.dateRange.endDate?.toLocaleDateString() || 'Atual'}
                     <Box 
                       as="span" 
                       ml={1} 
                       cursor="pointer" 
-                      onClick={() => updateFilter('dateRange', { startDate: null, endDate: null })}
+                      onClick={() => handleRemoveFilter('dateRange', { startDate: null, endDate: null })}
                     >
                       <FiX size={14} />
                     </Box>

@@ -6,12 +6,20 @@ import MainLayout from './components/layout/MainLayout'
 import Dashboard from './components/dashboard/Dashboard'
 import DatePickerStyles from './components/common/DatePickerStyles'
 
+import React from 'react';
+import { Global } from '@emotion/react';
+import theme from './styles/theme';
+import globalStyles from './styles/globalStyles';
+
+
 function App() {
   return (
-    <ChakraProvider>
-      {/* Adiciona os estilos globais para o DatePicker */}
+    <ChakraProvider theme={theme}>
+      {/* Estilos globais */}
+      <Global styles={globalStyles} />
       <DatePickerStyles />
       
+      {/* Providers de contexto */}
       <FilterProvider>
         <DashboardProvider>
           <MainLayout>
@@ -20,7 +28,7 @@ function App() {
         </DashboardProvider>
       </FilterProvider>
     </ChakraProvider>
-  )
+  );
 }
 
-export default App
+export default App;

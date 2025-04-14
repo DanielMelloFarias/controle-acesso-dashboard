@@ -1,8 +1,7 @@
 // src/styles/theme.js
-import { defineConfig } from '@chakra-ui/react';
+import { extendTheme } from '@chakra-ui/react';
 
-// Defina seu tema personalizado usando a nova API do Chakra UI v3
-const theme = defineConfig({
+const theme = extendTheme({
   config: {
     initialColorMode: 'light',
     useSystemColorMode: false,
@@ -14,20 +13,20 @@ const theme = defineConfig({
       200: '#9bc7ee',
       300: '#6eafe7',
       400: '#4c9ce1',
-      500: '#3182ce', // Azul principal
+      500: '#3182ce',
       600: '#2b67a9',
       700: '#214d85',
       800: '#183461',
       900: '#0e1c3d',
     },
     secondary: {
-      500: '#ffd700', // Amarelo para suporte
+      500: '#ffd700',
     },
     success: {
-      500: '#48bb78', // Verde para operacional
+      500: '#48bb78',
     },
     danger: {
-      500: '#e53e3e', // Vermelho para saúde
+      500: '#e53e3e',
     },
   },
   fonts: {

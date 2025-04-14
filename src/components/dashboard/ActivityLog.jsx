@@ -30,10 +30,16 @@ import {
 } from '@chakra-ui/react';
 import { FiDownload, FiChevronRight, FiMoreVertical, FiFilter } from 'react-icons/fi';
 import ReportModal from '../common/ReportModal';
+import UserDetailModal from '../common/UserDetailModal';
+import { useDashboard } from '../../contexts/DashboardContext';
 
 const ActivityLog = ({ activities }) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [selectedActivity, setSelectedActivity] = useState(null);
+  const { isOpen: isReportOpen, onOpen: onReportOpen, onClose: onReportClose } = useDisclosure();
+  const { isOpen: isUserDetailOpen, onOpen: onUserDetailOpen, onClose: onUserDetailClose } = useDisclosure();
+  const [selectedUser, setSelectedUser] = useState({ id: null, name: '' });
+  
+  // Obtém a função para buscar detalhes de pessoa do contexto
+  const { getPersonDetails } = useDashboard();
   
   const bgColor = useColorModeValue('white', 'gray.700');
   const headerColor = useColorModeValue('gray.700', 'white');
@@ -49,12 +55,15 @@ const ActivityLog = ({ activities }) => {
   const tablePadding = useBreakpointValue({ base: 2, md: 4 });
   
   const handleGenerateReport = () => {
-    onOpen();
+    onReportOpen();
   };
   
   const handleViewDetails = (activity) => {
-    setSelectedActivity(activity);
-    console.log('Ver detalhes:', activity);
+    setSelectedUser({
+      id: activity.pessoaId,
+      name: activity.name
+    });
+    onUserDetailOpen();
   };
 
   // Colunas a exibir baseadas no tamanho da tela
@@ -120,110 +129,127 @@ const ActivityLog = ({ activities }) => {
         </CardHeader>
 
         <CardBody pt={0} overflowX="auto" px={{ base: 1, md: 4 }}>
-          <Table variant="simple" size={isMobile ? "sm" : "md"}>
-            <Thead>
-              <Tr>
-                {visibleColumns.includes('HORÁRIO') && (
-                  <Th color={thColor} fontWeight="semibold" fontSize="xs" textTransform="uppercase" px={tablePadding} py={tablePadding} borderColor={borderColor}>
-                    Horário
-                  </Th>
-                )}
-                {visibleColumns.includes('NOME') && (
-                  <Th color={thColor} fontWeight="semibold" fontSize="xs" textTransform="uppercase" px={tablePadding} py={tablePadding} borderColor={borderColor}>
-                    Nome
-                  </Th>
-                )}
-                {visibleColumns.includes('TIPO') && (
-                  <Th color={thColor} fontWeight="semibold" fontSize="xs" textTransform="uppercase" px={tablePadding} py={tablePadding} borderColor={borderColor}>
-                    Tipo
-                  </Th>
-                )}
-                {visibleColumns.includes('LOCAL') && (
-                  <Th color={thColor} fontWeight="semibold" fontSize="xs" textTransform="uppercase" px={tablePadding} py={tablePadding} borderColor={borderColor}>
-                    Local
-                  </Th>
-                )}
-                {visibleColumns.includes('STATUS') && (
-                  <Th color={thColor} fontWeight="semibold" fontSize="xs" textTransform="uppercase" px={tablePadding} py={tablePadding} borderColor={borderColor}>
-                    Status
-                  </Th>
-                )}
-                {visibleColumns.includes('AÇÕES') && (
-                  <Th color={thColor} fontWeight="semibold" fontSize="xs" textTransform="uppercase" px={tablePadding} py={tablePadding} borderColor={borderColor} width="40px">
-                    {!isMobile && "Ações"}
-                  </Th>
-                )}
-              </Tr>
-            </Thead>
-            <Tbody>
-              {activities.map((activity) => (
-                <Tr key={activity.id} _hover={{ bg: hoverBgColor }}>
+          {activities && activities.length > 0 ? (
+            <Table variant="simple" size={isMobile ? "sm" : "md"}>
+              <Thead>
+                <Tr>
                   {visibleColumns.includes('HORÁRIO') && (
-                    <Td px={tablePadding} py={tablePadding} borderColor={borderColor} fontSize={isMobile ? "xs" : "sm"}>
-                      {activity.time}
-                    </Td>
+                    <Th color={thColor} fontWeight="semibold" fontSize="xs" textTransform="uppercase" px={tablePadding} py={tablePadding} borderColor={borderColor}>
+                      Horário
+                    </Th>
                   )}
                   {visibleColumns.includes('NOME') && (
-                    <Td px={tablePadding} py={tablePadding} borderColor={borderColor}>
-                      <HStack spacing={isMobile ? 1 : 3}>
-                        <Avatar size={isMobile ? "2xs" : "sm"} name={activity.name} src={activity.avatar} />
-                        {!isMobile && <Text fontWeight="medium" fontSize={isMobile ? "xs" : "sm"}>{activity.name}</Text>}
-                        {isMobile && <Text fontWeight="medium" fontSize="xs" isTruncated maxW="60px">{activity.name.split(' ')[0]}</Text>}
-                      </HStack>
-                    </Td>
+                    <Th color={thColor} fontWeight="semibold" fontSize="xs" textTransform="uppercase" px={tablePadding} py={tablePadding} borderColor={borderColor}>
+                      Nome
+                    </Th>
                   )}
                   {visibleColumns.includes('TIPO') && (
-                    <Td px={tablePadding} py={tablePadding} borderColor={borderColor} fontSize={isMobile ? "xs" : "sm"}>
-                      {activity.type}
-                    </Td>
+                    <Th color={thColor} fontWeight="semibold" fontSize="xs" textTransform="uppercase" px={tablePadding} py={tablePadding} borderColor={borderColor}>
+                      Tipo
+                    </Th>
                   )}
                   {visibleColumns.includes('LOCAL') && (
-                    <Td px={tablePadding} py={tablePadding} borderColor={borderColor} fontSize={isMobile ? "xs" : "sm"}>
-                      {activity.location}
-                    </Td>
+                    <Th color={thColor} fontWeight="semibold" fontSize="xs" textTransform="uppercase" px={tablePadding} py={tablePadding} borderColor={borderColor}>
+                      Local
+                    </Th>
                   )}
                   {visibleColumns.includes('STATUS') && (
-                    <Td px={tablePadding} py={tablePadding} borderColor={borderColor}>
-                      <Badge
-                        colorScheme={activity.status === 'ENTROU' ? 'green' : 'red'}
-                        px={isMobile ? 1 : 2}
-                        py={isMobile ? 0 : 1}
-                        borderRadius="md"
-                        fontWeight="bold"
-                        fontSize={isMobile ? "2xs" : "xs"}
-                      >
-                        {activity.status}
-                      </Badge>
-                    </Td>
+                    <Th color={thColor} fontWeight="semibold" fontSize="xs" textTransform="uppercase" px={tablePadding} py={tablePadding} borderColor={borderColor}>
+                      Status
+                    </Th>
                   )}
                   {visibleColumns.includes('AÇÕES') && (
-                    <Td px={tablePadding} py={tablePadding} borderColor={borderColor}>
-                      <Menu>
-                        <MenuButton
-                          as={IconButton}
-                          icon={<FiMoreVertical size={isMobile ? 14 : 16} />}
-                          variant="ghost"
-                          size={isMobile ? "xs" : "sm"}
-                          aria-label="Opções"
-                        />
-                        <MenuList>
-                          <MenuItem onClick={() => handleViewDetails(activity)}>
-                            Ver detalhes
-                          </MenuItem>
-                          <MenuItem>Verificar histórico</MenuItem>
-                          <MenuItem>Enviar notificação</MenuItem>
-                        </MenuList>
-                      </Menu>
-                    </Td>
+                    <Th color={thColor} fontWeight="semibold" fontSize="xs" textTransform="uppercase" px={tablePadding} py={tablePadding} borderColor={borderColor} width="40px">
+                      {!isMobile && "Ações"}
+                    </Th>
                   )}
                 </Tr>
-              ))}
-            </Tbody>
-          </Table>
+              </Thead>
+              <Tbody>
+                {activities.map((activity) => (
+                  <Tr key={activity.id} _hover={{ bg: hoverBgColor }}>
+                    {visibleColumns.includes('HORÁRIO') && (
+                      <Td px={tablePadding} py={tablePadding} borderColor={borderColor} fontSize={isMobile ? "xs" : "sm"}>
+                        {activity.time}
+                      </Td>
+                    )}
+                    {visibleColumns.includes('NOME') && (
+                      <Td px={tablePadding} py={tablePadding} borderColor={borderColor}>
+                        <HStack spacing={isMobile ? 1 : 3}>
+                          <Avatar size={isMobile ? "2xs" : "sm"} name={activity.name} src={activity.avatar} />
+                          {!isMobile && <Text fontWeight="medium" fontSize={isMobile ? "xs" : "sm"}>{activity.name}</Text>}
+                          {isMobile && <Text fontWeight="medium" fontSize="xs" isTruncated maxW="60px">{activity.name.split(' ')[0]}</Text>}
+                        </HStack>
+                      </Td>
+                    )}
+                    {visibleColumns.includes('TIPO') && (
+                      <Td px={tablePadding} py={tablePadding} borderColor={borderColor} fontSize={isMobile ? "xs" : "sm"}>
+                        {activity.type}
+                      </Td>
+                    )}
+                    {visibleColumns.includes('LOCAL') && (
+                      <Td px={tablePadding} py={tablePadding} borderColor={borderColor} fontSize={isMobile ? "xs" : "sm"}>
+                        {activity.location}
+                      </Td>
+                    )}
+                    {visibleColumns.includes('STATUS') && (
+                      <Td px={tablePadding} py={tablePadding} borderColor={borderColor}>
+                        <Badge
+                          colorScheme={activity.status === 'ENTROU' ? 'green' : 'red'}
+                          px={isMobile ? 1 : 2}
+                          py={isMobile ? 0 : 1}
+                          borderRadius="md"
+                          fontWeight="bold"
+                          fontSize={isMobile ? "2xs" : "xs"}
+                        >
+                          {activity.status}
+                        </Badge>
+                      </Td>
+                    )}
+                    {visibleColumns.includes('AÇÕES') && (
+                      <Td px={tablePadding} py={tablePadding} borderColor={borderColor}>
+                        <Menu>
+                          <MenuButton
+                            as={IconButton}
+                            icon={<FiMoreVertical size={isMobile ? 14 : 16} />}
+                            variant="ghost"
+                            size={isMobile ? "xs" : "sm"}
+                            aria-label="Opções"
+                          />
+                          <MenuList>
+                            <MenuItem onClick={() => handleViewDetails(activity)}>
+                              Ver detalhes
+                            </MenuItem>
+                            <MenuItem>Verificar histórico</MenuItem>
+                            <MenuItem>Enviar notificação</MenuItem>
+                          </MenuList>
+                        </Menu>
+                      </Td>
+                    )}
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          ) : (
+            <Box textAlign="center" py={8}>
+              <Text color="gray.500">Nenhuma atividade encontrada com os filtros atuais.</Text>
+            </Box>
+          )}
         </CardBody>
       </Card>
 
-      <ReportModal isOpen={isOpen} onClose={onClose} />
+      {/* Modais */}
+      <ReportModal isOpen={isReportOpen} onClose={onReportClose} />
+      
+      {/* Modal com detalhes do usuário */}
+      {selectedUser.id && (
+        <UserDetailModal 
+          isOpen={isUserDetailOpen}
+          onClose={onUserDetailClose}
+          userId={selectedUser.id}
+          userName={selectedUser.name}
+        />
+      )}
     </>
   );
 };

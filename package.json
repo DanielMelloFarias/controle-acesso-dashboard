@@ -29,6 +29,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
+  "proxy": "https://monitoramento.wylken.com.br",
   "eslintConfig": {
     "extends": [
       "react-app",

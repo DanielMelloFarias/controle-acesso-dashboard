@@ -1,13 +1,12 @@
 // src/components/dashboard/MetricsGrid.jsx
 import React from 'react';
-import { SimpleGrid, useBreakpointValue } from '@chakra-ui/react';
+import { SimpleGrid, Skeleton, useBreakpointValue } from '@chakra-ui/react';
 import MetricCard from './MetricCard';
 import { FiUsers, FiUserX, FiClock, FiBriefcase, FiAlertCircle } from 'react-icons/fi';
 import { useDashboard } from '../../contexts/DashboardContext';
 
 const MetricsGrid = () => {
-  const { dashboardData } = useDashboard();
-  const { metrics } = dashboardData;
+  const { dashboardData, isLoading } = useDashboard();
   
   // Configurações responsivas para o grid
   const columns = useBreakpointValue({ 
@@ -20,6 +19,19 @@ const MetricsGrid = () => {
   
   const spacing = useBreakpointValue({ base: 3, md: 4, lg: 5 });
   const iconSize = useBreakpointValue({ base: 3, md: 4 });
+
+  // Skeleton enquanto carrega
+  if (isLoading || !dashboardData || !dashboardData.metrics) {
+    return (
+      <SimpleGrid columns={columns} spacing={spacing}>
+        {[...Array(5)].map((_, i) => (
+          <Skeleton key={i} height="100px" />
+        ))}
+      </SimpleGrid>
+    );
+  }
+
+  const { metrics } = dashboardData;
 
   const metricConfigs = [
     {

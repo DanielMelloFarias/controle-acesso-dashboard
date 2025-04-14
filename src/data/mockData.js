@@ -13,7 +13,7 @@ export const mockDashboardData = {
         comparison: 'do total'
       },
       averageStay: {
-        value: '8.5h',
+        value: '8.5h ',
         trend: 'increase',
         comparison: '+30min vs. ontem'
       },
